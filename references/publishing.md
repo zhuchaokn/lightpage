@@ -1,6 +1,6 @@
 # 发布说明
 
-单文件须为 UTF-8 HTML，自带资源可以内嵌；显式 --preview 可额外上传静态封面。依赖旁边的 CSS、JS 或图片时上传整个静态目录，根目录须有非空 index.html。目录和所有嵌套资源共最多 100 个文件，展开及 ZIP 各最多 50 MiB。脚本按稳定顺序和固定时间戳打包，同样文件生成相同摘要。
+单文件支持 HTML、UTF-8 Markdown（.md）或 TXT（.txt），自带资源可以内嵌；显式 --preview 可额外上传静态封面。依赖旁边的 CSS、JS 或图片时上传整个静态目录，根目录须有非空 index.html、index.md 或 index.txt（依次优先）。目录和所有嵌套资源共最多 100 个文件，展开及 ZIP 各最多 50 MiB。脚本按稳定顺序和固定时间戳打包，同样文件生成相同摘要。
 
 仅发布用户允许公开的内容。客户端忽略隐藏文件、node_modules、依赖清单与 source map，拒绝符号链接、设备文件和明确的私钥；这些检查不等于完整脱敏。敏感内容也可能在 HTML、JSON 或图片中，不能把忽略规则当作公开授权。
 
@@ -23,7 +23,7 @@ python3 "/实际skill目录/scripts/litepage.py" publish /作品/dist --check
 
 ## 兼容字段与作品预览
 
-Skill 不提供 feed 命令，网页首页保留作品发现。作品通过链接分享，未保护作品任何持链接者无需登录即可访问。public/private 与 visibility 命令保留兼容，新作品缺省 public，更新保留原值；public 作品可在首页发现，private 不进入首页；它们不提供密码保护，启用密码的作品始终不进入首页。
+Skill 不提供 feed 命令，网页首页保留作品发现。作品通过链接分享，未保护作品任何持链接者无需登录即可访问。public/private 与 visibility 命令保留兼容，新作品缺省 private，更新保留原值；public 作品可在首页发现，private 不进入首页；它们不提供密码保护，启用密码的作品始终不进入首页。
 
 截图可选，不传 --preview 可直接发布。用户要求时按[作品预览截图](preflight.md#作品预览截图)提供真实本地首屏，用 `--preview /截图/cover.png` 上传，可用 `--description "简短介绍"` 提供最多 240 字符的说明。更新不传 --preview 清除旧版本预览，避免误认为当前截图；不为普通发布默认安装截图依赖。
 
@@ -40,3 +40,9 @@ python3 "/实际skill目录/scripts/litepage.py" publish "/作品/dist" --passwo
 返回 password_protected=true 才能说明密码已启用；CLI 还检查未授权公开入口跳转到密码页。保护覆盖作品 HTML 及嵌套图片、脚本等资源，。访客输入分享者提供的密码后获得一小时浏览器授权；更换密码使旧授权失效，链接不变。分别交付链接和用户指定的密码，避免在不合适的公开渠道泄露；分享二维码只编码链接。HEAD 只能验证密码入口，不能证明授权后的页面运行正常。移除密码后，持链接者无需密码即可访问，应按用户要求执行。
 
 密码保护不能收回已经下载的副本，也不提供同域作品间的浏览器隔离；能力边界和既有同源存储风险仍按[发布前审查](preflight.md)处理。
+
+## Markdown 与 TXT
+
+沿用 publish／update，无新参数：`publish /作品/guide.md` 或 `publish /作品/notes.txt`。文档入口最多 2 MiB，须为 UTF-8 且无 NUL，上传保留原始字节。分享链接在浏览器明确请求 HTML 时显示阅读页；无格式偏好或请求 text/markdown／text/plain 时返回原文。发布结果的 source_url 是明确的原文地址（index.md／index.txt），始终返回原文；默认分享链接通过 Link 头给出该地址。HTML 原有行为不变。
+
+Markdown 阅读页支持标题、列表、引用、代码、链接、图片、表格和删除线，原始 HTML 只作为文本显示，不执行。TXT 保留换行、空白并转义 HTML。本文档入口的本地预览只显示转义原文，线上由内容网关渲染 Markdown；不可把本地源码预览当作已验证线上排版。密码、可见性、更新和下架沿用原规则。

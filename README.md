@@ -1,8 +1,8 @@
 # lightpage（轻页）
 
-**让 AI 做出来的网页，变成可以直接发给别人的链接。**
+**让 AI 做出来的网页和文档，变成可以直接发给别人的链接。**
 
-lightpage 是一个免费的网页发布 Skill。你可以让支持 Skill 的 AI 助手制作小游戏、小工具或交互页面，再用轻页发布并分享。发布后的网页可以在浏览器里直接打开，访问者无需安装 Skill。
+lightpage 是一个免费的网页和文档发布 Skill。你可以让支持 Skill 的 AI 助手制作小游戏、小工具或交互页面，再用轻页发布并分享。发布后的网页可以在浏览器里直接打开，访问者无需安装 Skill。
 
 [轻页官网](https://lightpage.hqdx.store/) · [管理我的作品](https://lightpage.hqdx.store/manage/) · [Skill 使用指南](SKILL.md)
 
@@ -26,15 +26,17 @@ npx skills add zhuchaokn/lightpage --skill lightpage
 
 - “帮我做一个接水果小游戏，用 lightpage 发布，给我一个能发到微信里的链接。”
 - “把这个 HTML 页面发布出去，标题叫旅行计划。”
+- “把这份 Markdown 文档发成分享链接。”
 - “更新我之前发布的这个作品，保留原来的链接。”
 - “给这个页面设置访问密码，分别告诉我链接和密码。”
 - “看看我这个作品最近 7 天的访问情况。”
 
-首次发布无需提前扫码登录。发布后，AI 会提供作品链接和只给你的微信认领入口；你可以自行确认认领，之后在官网管理作品。认领入口不能分享给访客。
+首次发布无需提前扫码登录。发布后，AI 会提供作品链接和只给你的微信认领入口；你可以自行确认认领，之后在官网管理作品。认领入口不能分享给访客。新作品默认仅链接访问，不出现在首页；需要公开展示或密码保护时，可在作品管理中调整。
 
 ## 能做什么
 
-- 发布单个 HTML 文件或静态网站目录，生成分享链接。
+- 发布 HTML、Markdown、TXT 或静态网站目录，生成分享链接。
+- 按需读取作品原文，支持分片续读。
 - 更新已有作品并保留链接，管理可见性、密码和下架。
 - 查看自己的作品和访问统计。
 - 按需生成作品分享二维码。
@@ -56,7 +58,7 @@ python3 scripts/litepage.py publish /你的作品/index.html --title "我的作�
 
 ## 版本与项目范围
 
-当前 Skill 版本：**0.8.2**。
+当前 Skill 版本：**0.9.0**。
 
 本仓库发布 lightpage Skill、参考文档和运行必需的客户端脚本。后端服务、官网工程、业务数据库和部署配置由轻页平台维护。请通过 [Issues](https://github.com/zhuchaokn/lightpage/issues) 提交使用问题，不要上传账号凭证或私有认领入口。
 
@@ -66,6 +68,6 @@ python3 scripts/litepage.py publish /你的作品/index.html --title "我的作�
 
 ## English
 
-lightpage is an Agent Skill for publishing and sharing HTML files and static websites through the free LightPage service. Install this repository as a skill, ask your agent to create or publish a page, and share the resulting URL. It includes the skill instructions, references, and the Python client required to run it.
+lightpage is an Agent Skill for publishing and sharing HTML, Markdown, TXT and static websites through the free LightPage service. Install this repository as a skill, ask your agent to create or publish a page, and share the resulting URL. It includes the skill instructions, references, and the Python client required to run it.
 
 Requires an agent with local Python execution. Supports Python 3.6–3.12 on macOS/Linux, or Windows through WSL. Routine publishing uses the Python standard library; optional screenshot processing may require additional tools. See [SKILL.md](SKILL.md) for the complete workflow.

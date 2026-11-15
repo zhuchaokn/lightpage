@@ -58,12 +58,27 @@ class LitePageAPI(API):
         return super().send(method, path, **kwargs)
 
 
+def read_size(value):
+    try:
+        size = int(value)
+    except ValueError:
+        raise argparse.ArgumentTypeError("Use an integer from 1 to 262144") from None
+    if not 1 <= size <= 262144:
+        raise argparse.ArgumentTypeError("Use an integer from 1 to 262144")
+    return size
+
+
 def parser():
     root = argparse.ArgumentParser(
         prog="litepage", description="轻页 LitePage · 发布静态网页、管理作品与收发站内信"
     )
     root.add_argument("--server", default=os.getenv("LITEPAGE_SERVER", DEFAULT_SERVER))
     commands = subparsers(root, dest="command")
+    read = commands.add_parser("read", help="Read a bounded HTML document and record Agent visits")
+    read.add_argument("url")
+    read.add_argument("--read-id", type=uuid.UUID, default=None)
+    read.add_argument("--cursor", default=None)
+    read.add_argument("--max-bytes", type=read_size, default=65536, metavar="1-262144")
     capabilities = commands.add_parser(
         "capabilities", help="Discover platform capabilities and read integration instructions"
     )
@@ -227,6 +242,16 @@ def read_password(path, *, allow_empty=False):
     return value
 
 
+def sharing_hint(result):
+    if result.get("password_protected"):
+        return "作品已设置密码保护，访客需输入密码读取，不在轻页首页展示。可在作品管理中更换或移除密码。"
+    if result.get("visibility") == "private":
+        return "作品为仅链接访问（private），持有链接的人可直接读取，不在轻页首页展示。可改为 public，让作品在首页被发现；也可设置密码，要求访客输入密码后读取。"
+    if result.get("visibility") == "public":
+        return "作品为公开展示（public），可在轻页首页被发现，持有链接的人可直接读取。可改为 private 停止首页展示；如需保护内容，可设为 private 并设置密码。"
+    return None
+
+
 def publish(api, args):
     password = read_password(args.password_file)
     if args.password_file and args.source.is_dir():
@@ -388,16 +413,55 @@ def publish(api, args):
     with api.store.lock():
         atomic_json(receipt_path, record)
         atomic_json(journal, record)
+    if summary["entrypoint"] in {"index.md", "index.txt"}:
+        result["source_url"] = result["url"] + summary["entrypoint"]
     if summary["external_resources"]:
         result["warning"] = (
             "External resources remain external; their availability is not guaranteed by hosting"
         )
+    if result.get("status") == "ready" and result.get("deployment_id") == record["deployment_id"]:
+        hint = sharing_hint(result)
+        if hint:
+            result["sharing_hint"] = hint
     if "creator" in result:
         result["creator"] = claim_handoff(api, result["creator"])
     return result
 
 
 def execute(api, args):
+    if args.command == "read":
+        parsed = urlparse(args.url)
+        origin = urlparse(api.server)
+        if (
+            parsed.scheme != "https"
+            or parsed.netloc != origin.netloc
+            or not parsed.path.startswith("/p/")
+        ):
+            raise ValueError("Read only a work URL on the selected LightPage instance")
+        if args.cursor and not args.read_id:
+            raise ValueError("Continue a read with the original --read-id")
+        with api.store.lock():
+            path = api.store.path.with_name("visitor-" + api.store.account + ".json")
+            if path.is_symlink():
+                raise RuntimeError("Visitor config must not be a symlink")
+            if path.exists():
+                visitor = json.loads(path.read_text())["id"]
+                uuid.UUID(visitor)
+            else:
+                visitor = str(uuid.uuid4())
+                atomic_json(path, {"id": visitor})
+        return api.request(
+            "GET",
+            "/v1/hosting/read",
+            params={
+                "url": args.url,
+                "visitor_id": visitor,
+                "read_id": str(args.read_id or uuid.uuid4()),
+                "max_bytes": args.max_bytes,
+                "cursor": args.cursor,
+            },
+        )
+
     if args.command == "capabilities":
         from urllib.parse import quote
 

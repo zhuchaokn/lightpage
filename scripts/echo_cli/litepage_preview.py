@@ -5,6 +5,7 @@ import json
 import mimetypes
 import threading
 import zipfile
+from html import escape
 from http.server import BaseHTTPRequestHandler
 from io import BytesIO
 from pathlib import Path
@@ -24,6 +25,11 @@ def server(source):
     with zipfile.ZipFile(BytesIO(data)) as archive:
         files = {name: archive.read(name) for name in archive.namelist()}
 
+    if "index.html" not in files:
+        inspection["preview_note"] = (
+            "Local document preview shows escaped source; Markdown is rendered by the deployed content gateway."
+        )
+
     class Handler(BaseHTTPRequestHandler):
         def log_message(self, *args):
             pass  # Do not log query strings or user-provided URLs.
@@ -40,11 +46,30 @@ def server(source):
             expected_host = f"127.0.0.1:{self.server.server_port}"
             name = path[len(PREFIX) :] if path.startswith(PREFIX) else None
             if name is not None and (not name or name.endswith("/")):
-                name += "index.html"
+                name = next(
+                    (
+                        name + entry
+                        for entry in ("index.html", "index.md", "index.txt")
+                        if name + entry in files
+                    ),
+                    name + "index.html",
+                )
             valid = host == expected_host and name in files
             body = files[name] if valid else b"Not found (no root asset or SPA fallback)"
+            document = valid and name in {"index.md", "index.txt"}
+            if document:
+                text = body.decode("utf-8")
+                body = (
+                    '<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><pre style="white-space:pre-wrap;max-width:860px;margin:24px auto;font:16px/1.7 monospace">'
+                    + escape(text)
+                    + "</pre>"
+                ).encode("utf-8")
             self.send_response(200 if valid else 404)
-            media = mimetypes.guess_type(name or "")[0] if valid else "text/plain"
+            media = (
+                "text/html; charset=utf-8"
+                if document
+                else (mimetypes.guess_type(name or "")[0] if valid else "text/plain")
+            )
             self.send_header("Content-Type", media or "application/octet-stream")
             self.send_header("Content-Length", str(len(body)))
             self.send_header("Cache-Control", "no-store")

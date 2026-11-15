@@ -11,6 +11,7 @@ from echo_cli.litepage_review import review
 
 MAX_BYTES = 50 * 1024 * 1024
 EXTENSIONS = {
+    ".md",
     ".html",
     ".htm",
     ".css",
@@ -53,9 +54,10 @@ def bundle(source, preview=None):
         raise RuntimeError("Publish source does not exist")
     candidates = []
     if source.is_file():
-        if source.suffix.lower() not in {".html", ".htm"}:
-            raise RuntimeError("Single-file publishing requires HTML")
-        candidates = [("index.html", source)]
+        if source.suffix.lower() not in {".html", ".htm", ".md", ".txt"}:
+            raise RuntimeError("Single-file publishing requires HTML, Markdown or TXT")
+        suffix = source.suffix.lower()
+        candidates = [("index" + (".html" if suffix == ".htm" else suffix), source)]
     else:
         # Traverse explicitly so excluded directories are never entered.
         pending = [source]
@@ -111,8 +113,20 @@ def bundle(source, preview=None):
         if b"-----BEGIN " in value and b"PRIVATE KEY-----" in value:
             raise RuntimeError(f"Private key detected in {name[:160]}; remove it before publishing")
         files[name] = value
-    if not files.get("index.html"):
-        raise RuntimeError("Provide a nonempty index.html at the output root")
+    entry = next((name for name in ("index.html", "index.md", "index.txt") if name in files), None)
+    if entry is None or not files[entry]:
+        raise RuntimeError(
+            "Provide a nonempty index.html, index.md or index.txt at the output root"
+        )
+    if entry != "index.html":
+        if len(files[entry]) > 2 * 1024 * 1024:
+            raise RuntimeError("Markdown/TXT documents must not exceed 2 MiB")
+        try:
+            text = files[entry].decode("utf-8")
+        except UnicodeDecodeError:
+            raise RuntimeError("Use UTF-8 for Markdown/TXT documents") from None
+        if "\x00" in text:
+            raise RuntimeError("Markdown/TXT documents must not contain NUL")
     if preview is not None:
         from echo_cli.litepage_cover import cover
 
@@ -137,6 +151,7 @@ def bundle(source, preview=None):
         "file_count": len(files),
         "size": sum(map(len, files.values())),
         "sha256": hashlib.sha256(data).hexdigest(),
-        "entry_sha256": hashlib.sha256(files["index.html"]).hexdigest(),
+        "entry_sha256": hashlib.sha256(files[entry]).hexdigest(),
+        "entrypoint": entry,
         **inspection,
     }

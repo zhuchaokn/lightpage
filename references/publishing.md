@@ -46,3 +46,7 @@ python3 "/实际skill目录/scripts/litepage.py" publish "/作品/dist" --passwo
 沿用 publish／update，无新参数：`publish /作品/guide.md` 或 `publish /作品/notes.txt`。文档入口最多 2 MiB，须为 UTF-8 且无 NUL，上传保留原始字节。分享链接在浏览器明确请求 HTML 时显示阅读页；无格式偏好或请求 text/markdown／text/plain 时返回原文。发布结果的 source_url 是明确的原文地址（index.md／index.txt），始终返回原文；默认分享链接通过 Link 头给出该地址。HTML 原有行为不变。
 
 Markdown 阅读页支持标题、列表、引用、代码、链接、图片、表格和删除线，原始 HTML 只作为文本显示，不执行。TXT 保留换行、空白并转义 HTML。本文档入口的本地预览只显示转义原文，线上由内容网关渲染 Markdown；不可把本地源码预览当作已验证线上排版。密码、可见性、更新和下架沿用原规则。
+
+## 统一分享方式
+
+新任务优先使用一个 `--sharing public|link|password|approval`，与旧 `--visibility` 互斥；更新省略保留原设置。指定人可见、密码参数和审批操作见[访问授权](access.md)。

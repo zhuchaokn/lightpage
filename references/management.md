@@ -67,3 +67,13 @@ python3 "/实际skill目录/scripts/litepage.py" read "https://lightpage.hqdx.st
 URL 只能是当前选定实例的 HTTPS 作品 URL；绝不向作品 URL 或外域发送管理凭证。密码作品需要现有浏览器密码授权，此命令不提供密码绕过。查询 list/status/analytics 和发布 HEAD 校验不产生 APV。
 
 新 analytics 响应可附加 metrics_v2，其中 PV／UV 为浏览器统计，APV／AUV 为 Agent 统计，since 为启用时间；已登录按账号去重，匿名按持久标识去重。顶层旧字段保持旧口径，不与新口径相加；metrics_v2 缺省或 null 时 Agent 指标不可用，不显示为已采集的零。
+
+## 生成作品分享二维码
+
+使用发布响应的真实 `url` 或用户给出的完整作品链接：
+
+```bash
+python3 "/实际skill目录/scripts/litepage.py" qr "https://lightpage.hqdx.store/p/实际8位短码/" --output /截图/作品二维码.png
+```
+
+命令离线执行，不登录、不请求链接、不创建作品；成功返回绝对 `qr_path`，展示该图片并附原链接。生成二维码不等于验证作品仍可访问。**不得把 creator.claim_url、核对码或凭证编码到分享二维码。**发布／更新后默认不执行本命令。

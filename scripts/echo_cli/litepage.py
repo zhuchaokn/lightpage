@@ -13,7 +13,7 @@ import uuid
 from pathlib import Path
 from urllib.parse import urlparse
 
-from echo_cli import litepage_mail, transport
+from echo_cli import litepage_access, litepage_mail, transport
 from echo_cli.client import API, APIError, checked
 from echo_cli.compat import subparsers, unlink
 from echo_cli.credentials import CredentialStore, atomic_json
@@ -84,6 +84,7 @@ def parser():
     )
     capabilities.add_argument("name", nargs="?")
     litepage_mail.commands(commands)
+    litepage_access.commands(commands)
     for name in ("publish", "update"):
         cmd = commands.add_parser(name)
         if name == "update":
@@ -95,7 +96,9 @@ def parser():
             type=Path,
             help="UTF-8 file containing a sharing password; never printed",
         )
-        cmd.add_argument("--visibility", choices=["public", "private"])
+        selection = cmd.add_mutually_exclusive_group()
+        selection.add_argument("--visibility", choices=["public", "private"])
+        selection.add_argument("--sharing", choices=["public", "link", "password", "approval"])
         cmd.add_argument("--description")
         cmd.add_argument("--preview", type=Path, help="Local webpage screenshot (PNG/JPEG/WebP)")
         cmd.add_argument(
@@ -243,6 +246,8 @@ def read_password(path, *, allow_empty=False):
 
 
 def sharing_hint(result):
+    if result.get("sharing") == "approval":
+        return "作品需要发布者授权；访客微信登录后主动申请，获批账号可访问，转发链接不会转移权限。"
     if result.get("password_protected"):
         return "作品已设置密码保护，访客需输入密码读取，不在轻页首页展示。可在作品管理中更换或移除密码。"
     if result.get("visibility") == "private":
@@ -267,6 +272,7 @@ def publish(api, args):
     options = {
         k: v
         for k, v in {
+            "sharing": args.sharing,
             "visibility": args.visibility,
             "description": args.description,
             "preview_path": "litepage-preview.webp" if args.preview else None,
@@ -374,7 +380,8 @@ def publish(api, args):
         raise RuntimeError("Server did not confirm password protection; do not share the URL")
     if result["status"] == "ready" and result["deployment_id"] == record["deployment_id"]:
         # Fresh unauthenticated connection: never leak platform credentials to uploaded HTML.
-        url = urlparse(result["url"])
+        probe_url = result.get("content_url") or result["url"]
+        url = urlparse(probe_url)
         if (
             url.scheme != "https"
             or url.username
@@ -389,8 +396,14 @@ def publish(api, args):
             raise RuntimeError("Server returned an invalid content URL")
         try:
             with transport.Client(timeout=15, follow_redirects=False) as visitor:
-                response = visitor.head(result["url"])
-            if result.get("password_protected"):
+                response = visitor.head(probe_url)
+            if result.get("sharing") == "approval":
+                if (
+                    response.status_code != 303
+                    or response.headers.get("x-litepage-approval-protected") != "1"
+                ):
+                    raise RuntimeError("Approval protection was not verified; do not share the URL")
+            elif result.get("password_protected"):
                 if (
                     response.status_code != 303
                     or response.headers.get("x-litepage-password-protected") != "1"
@@ -453,6 +466,7 @@ def execute(api, args):
         return api.request(
             "GET",
             "/v1/hosting/read",
+            authenticated=bool(api.store.load()),
             params={
                 "url": args.url,
                 "visitor_id": visitor,
@@ -469,6 +483,18 @@ def execute(api, args):
         if args.name:
             path += "/" + quote(args.name, safe="")
         return api.request("GET", path, authenticated=False)
+    if args.command == "access":
+        return litepage_access.execute(api, args)
+    if args.command == "sharing":
+        password = read_password(args.password_file)
+        if password is not None and args.value != "password":
+            raise RuntimeError("Passwords require password sharing")
+        return api.request(
+            "PUT",
+            "/v1/hosting/sites/%s/sharing" % args.site_id,
+            authenticated=True,
+            json={"sharing": args.value, "password": password, "expected_revision": args.revision},
+        )
     if args.command in {"author", "mail"}:
         return litepage_mail.execute(api, args, ensure_identity)
     if args.command == "feedback":

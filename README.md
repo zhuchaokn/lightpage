@@ -34,6 +34,8 @@ npx skills add zhuchaokn/lightpage --skill lightpage
 
 首次发布无需提前扫码登录。发布后，AI 会提供作品链接和只给你的微信认领入口；你可以自行确认认领，之后在官网管理作品。认领入口不能分享给访客。新作品默认仅链接访问，不出现在首页；需要公开展示或密码保护时，可在作品管理中调整。
 
+标准 UI／SDK 不满足需求时，Skill 可按需读取当前实例提供的 SSO 登录、评论和访问授权 Markdown API 文档，直接调用接口自定义交互。只读取本次需要的能力，保留用户确认与权限边界。
+
 ## 能做什么
 
 - 发布 HTML、Markdown、TXT 或静态网站目录，生成分享链接。
@@ -60,7 +62,7 @@ python3 scripts/litepage.py publish /你的作品/index.html --title "我的作�
 
 ## 版本与项目范围
 
-当前 Skill 版本：**0.10.0**。
+当前 Skill 版本：**0.10.1**。
 
 本仓库发布 lightpage Skill、参考文档和运行必需的客户端脚本。后端服务、官网工程、业务数据库和部署配置由轻页平台维护。请通过 [Issues](https://github.com/zhuchaokn/lightpage/issues) 提交使用问题，不要上传账号凭证或私有认领入口。
 

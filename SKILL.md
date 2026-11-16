@@ -2,7 +2,7 @@
 metadata:
   slug: "lightpage"
   displayName: "lightpage"
-  version: "0.10.0"
+  version: "0.10.1"
   tags: ["内容分享", "content-sharing", "网页发布", "web-publishing", "静态网站", "static-site", "HTML托管", "html-hosting", "免费工具", "free-tools"]
   summary: "免费托管 HTML、Markdown、TXT 与静态作品，支持原文读取、作品管理、微信登录、评论和站内信。 Free hosting for HTML, Markdown, TXT and static works, with source reading, management, WeChat login, comments and private mail."
   homepage: "https://lightpage.hqdx.store"
@@ -73,14 +73,14 @@ python3 "<skill目录>/scripts/litepage.py" mail inbox --unread --limit 10
 
 ### Capabilities：给页面接入平台能力
 
-`capabilities` 用于发现轻页提供的页面能力，并获取接入说明。当前有访客微信登录（`login`）和位置评论（`comments`）：访客可用微信登录表明身份，或围绕选中文字和页面位置发表评论。这些是页面访客使用的能力，作品所有者的登录与绑定按上节操作。
+`capabilities` 用于发现轻页提供的页面能力，并获取接入说明。当前有访客微信登录（`login`）、位置评论（`comments`）和访问授权（`access`）：访客可用微信登录表明身份，或围绕选中文字和页面位置发表评论。这些是页面访客使用的能力，作品所有者的登录与绑定按上节操作。
 
 ```bash
 python3 "<skill目录>/scripts/litepage.py" capabilities
 python3 "<skill目录>/scripts/litepage.py" capabilities comments
 ```
 
-先查当前实例支持什么，再读取需要的能力说明，按返回的 instructions 将 SDK 接入 HTML。随后正常发布或更新，无需增加发布开关；查询能力本身不会登录或上传。详细接入见[平台能力](references/capabilities.md)。
+先查当前实例支持什么，再读取需要的能力说明。标准 UI／SDK 不满足用户需求时，允许按需读取该能力 guide_url 对应的 Markdown API 文档，直接调用接口实现自定义 UI；只读本次需要的能力，不预先加载全部文档。login/comments 也可按 instructions 接入 SDK。access 使用平台 API 与网关，沿现有作品链接使用，浏览器同源与用户许可要求见详情。随后正常发布或更新，无需增加发布开关；查询能力本身不会登录或上传。详细接入见[平台能力](references/capabilities.md)。
 
 ### 其他需求，按需查阅
 

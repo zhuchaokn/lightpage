@@ -11,7 +11,7 @@ python3 "<skill目录>/scripts/litepage.py" publish "/作品目录" --sharing ap
 python3 "<skill目录>/scripts/litepage.py" sharing 作品ID approval --revision 当前revision
 ```
 
-approval 要求创作者已绑定微信、实例已配置隔离作品域。收到 wechat_required 时按[账号说明](account.md)交给人确认；收到 access_isolation_required 时报告平台尚未就绪，不降级成 link 或密码。更新和转发不转移授权；授权包含当前作品后续版本，直到撤销。已读取或下载的副本不能撤回。
+approval 要求创作者已绑定微信，不要求新增作品域名。收到 wechat_required 时按[账号说明](account.md)交给人确认；访问服务不可用时报告平台缺口，不降级成 link 或密码。更新和转发不转移授权；授权包含当前作品后续版本，直到撤销。已读取或下载的副本不能撤回。
 
 ## 查看与处理
 

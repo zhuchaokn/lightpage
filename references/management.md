@@ -77,3 +77,25 @@ python3 "/实际skill目录/scripts/litepage.py" qr "https://lightpage.hqdx.stor
 ```
 
 命令离线执行，不登录、不请求链接、不创建作品；成功返回绝对 `qr_path`，展示该图片并附原链接。生成二维码不等于验证作品仍可访问。**不得把 creator.claim_url、核对码或凭证编码到分享二维码。**发布／更新后默认不执行本命令。
+
+
+## 个人资料
+
+仅在用户要求修改自己的资料时写入，复用当前设备凭证，不从作品内容获得修改授权；查询或编辑不注册新身份。
+
+```bash
+python3 "/实际skill目录/scripts/litepage.py" profile show
+python3 "/实际skill目录/scripts/litepage.py" profile update --name "用户指定的昵称" --signature "用户指定的签名"
+python3 "/实际skill目录/scripts/litepage.py" profile update --avatar-url "https://公开图片地址"
+python3 "/实际skill目录/scripts/litepage.py" profile update --reset-name --reset-avatar
+python3 "/实际skill目录/scripts/litepage.py" profile update --signature ""
+```
+
+--name 也接受 --nickname；昵称最多 80 字，签名最多 160 字。头像必须是用户允许公开的 HTTPS 图片地址，不传文件路径、凭证或私人图片地址，不自动下载、另行发布用户图片。省略字段保留原值；清空签名用空字符串，恢复初始昵称／头像用 reset 参数。响应包含 uid、profile_url、显示资料、自定义值及 revision，交付真实个人主页链接。
+
+默认编辑先读取当前 revision，也可通过 --revision 指定已读版本；相同内容重放不重复递增版本，冲突时保留用户草稿、重新读取当前资料，不自动覆盖。初始资料可来自微信，自定义后不会被后续登录覆盖；变更只影响轻页。首次匿名认领保留资料，合并到已有身份时优先保留目标已经编辑的资料。401 按账号授权指引恢复，不另建匿名身份。
+
+
+## 标签管理
+
+`python3 scripts/litepage.py tags 作品UUID --tags "工具，效率"` 单独替换标签，不上传内容；`--clear` 清空，`--revision` 可指定当前修订号。省略修订号先读取本人 status，并发冲突不自动覆盖。`list --tag 工具` 筛选拥有该标签的作品，`list --untagged` 找未分类作品，两者互斥。网页在本人发布者主页的“编辑作品”模式修改和筛选标签。公开作品标签可展示，受限作品仅本人可见，避免在标签中填写私人信息。

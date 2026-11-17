@@ -19,6 +19,8 @@ from echo_cli.compat import subparsers, unlink
 from echo_cli.credentials import CredentialStore, atomic_json
 from echo_cli.litepage_bundle import bundle
 from echo_cli.litepage_feedback import submit as submit_feedback
+from echo_cli.litepage_tags import exact as exact_tag
+from echo_cli.litepage_tags import parse as parse_tags
 from echo_cli.notices import output as notice_output
 from echo_cli.qr import create_login_qr, png
 from echo_cli.skill_version import LITEPAGE_SKILL_VERSION
@@ -85,6 +87,24 @@ def parser():
     capabilities.add_argument("name", nargs="?")
     litepage_mail.commands(commands)
     litepage_access.commands(commands)
+    profile = commands.add_parser("profile", help="Read or update your LightPage profile")
+    profile_commands = subparsers(profile, dest="profile_command")
+    profile_commands.add_parser("show")
+    edit_profile = profile_commands.add_parser("update")
+    name = edit_profile.add_mutually_exclusive_group()
+    name.add_argument(
+        "--name", "--nickname", dest="name", help="Display name, at most 80 characters"
+    )
+    name.add_argument("--reset-name", action="store_true", help="Use provider display name again")
+    avatar = edit_profile.add_mutually_exclusive_group()
+    avatar.add_argument("--avatar-url", help="Public HTTPS image URL")
+    avatar.add_argument("--reset-avatar", action="store_true", help="Use provider avatar again")
+    edit_profile.add_argument(
+        "--signature", help="Profile signature, at most 160 characters; empty clears"
+    )
+    edit_profile.add_argument(
+        "--revision", type=int, help="Expected profile revision; omit to read current profile"
+    )
     for name in ("publish", "update"):
         cmd = commands.add_parser(name)
         if name == "update":
@@ -99,6 +119,23 @@ def parser():
         selection = cmd.add_mutually_exclusive_group()
         selection.add_argument("--visibility", choices=["public", "private"])
         selection.add_argument("--sharing", choices=["public", "link", "password", "approval"])
+        home = cmd.add_mutually_exclusive_group()
+        home.add_argument(
+            "--without-home",
+            dest="home_enabled",
+            action="store_false",
+            default=None,
+            help="Hide the standard Home entry; preserve on subsequent updates",
+        )
+        home.add_argument(
+            "--with-home",
+            dest="home_enabled",
+            action="store_true",
+            help="Restore the standard Home entry",
+        )
+        tags = cmd.add_mutually_exclusive_group()
+        tags.add_argument("--tags", help="Comma-separated tags (English or Chinese comma)")
+        tags.add_argument("--clear-tags", action="store_true", help="Remove all tags")
         cmd.add_argument("--description")
         cmd.add_argument("--preview", type=Path, help="Local webpage screenshot (PNG/JPEG/WebP)")
         cmd.add_argument(
@@ -115,6 +152,12 @@ def parser():
     qr.add_argument(
         "--overwrite", action="store_true", help="Replace output after user confirmation"
     )
+    tags = commands.add_parser("tags", help="Change tags without uploading content")
+    tags.add_argument("site_id", type=uuid.UUID)
+    choice = tags.add_mutually_exclusive_group(required=True)
+    choice.add_argument("--tags")
+    choice.add_argument("--clear", action="store_true")
+    tags.add_argument("--revision", type=int)
     status = commands.add_parser("status")
     status.add_argument("site_id", type=uuid.UUID)
     claim = commands.add_parser("claim", help="Get a private creator WeChat claim link")
@@ -122,6 +165,9 @@ def parser():
     listing = commands.add_parser("list")
     listing.add_argument("--limit", type=int, choices=range(1, 51), default=10, metavar="1-50")
     listing.add_argument("--cursor")
+    filters = listing.add_mutually_exclusive_group()
+    filters.add_argument("--tag", help="Filter by a single exact tag")
+    filters.add_argument("--untagged", action="store_true")
     commands.add_parser("usage")
     analytics = commands.add_parser("analytics", help="Read owned works' PV/UV statistics")
     analytics.add_argument("site_id", type=uuid.UUID, nargs="?", help="Omit for all owned works")
@@ -258,6 +304,7 @@ def sharing_hint(result):
 
 
 def publish(api, args):
+    tags = [] if args.clear_tags else parse_tags(args.tags) if args.tags is not None else None
     password = read_password(args.password_file)
     if args.password_file and args.source.is_dir():
         try:
@@ -272,6 +319,8 @@ def publish(api, args):
     options = {
         k: v
         for k, v in {
+            "tags": tags,
+            "home_enabled": args.home_enabled,
             "sharing": args.sharing,
             "visibility": args.visibility,
             "description": args.description,
@@ -280,7 +329,7 @@ def publish(api, args):
         if v is not None
     }
     if args.check:
-        return {"status": "checked", **summary}
+        return {"status": "checked", **summary, **({"tags": tags} if tags is not None else {})}
     if summary["review"]["findings"]:
         print(json.dumps({"event": "prepublish_review", **summary["review"]}), file=sys.stderr)
     ensure_identity(api)
@@ -373,9 +422,18 @@ def publish(api, args):
         params={
             "title": record["title"],
             "expected_revision": record["expected_revision"],
-            **record.get("options", {}),
+            **{
+                k: json.dumps(v, ensure_ascii=False) if k == "tags" else v
+                for k, v in record.get("options", {}).items()
+            },
         },
     )
+    if (
+        tags is not None
+        and result.get("tags") != tags
+        and result.get("deployment_id") == record["deployment_id"]
+    ):
+        raise RuntimeError("Server did not confirm requested tags; read status before retrying")
     if password is not None and not result.get("password_protected"):
         raise RuntimeError("Server did not confirm password protection; do not share the URL")
     if result["status"] == "ready" and result["deployment_id"] == record["deployment_id"]:
@@ -442,6 +500,45 @@ def publish(api, args):
 
 
 def execute(api, args):
+    if args.command == "profile":
+        if args.profile_command == "show":
+            return api.request("GET", "/v1/hosting/profile", authenticated=True)
+        changes = {}
+        if args.name is not None:
+            if not args.name.strip() or len(args.name) > 80:
+                raise ValueError("Name must contain 1–80 characters")
+            changes["name"] = args.name
+        elif args.reset_name:
+            changes["name"] = None
+        if args.avatar_url is not None:
+            parsed = urlparse(args.avatar_url)
+            if (
+                parsed.scheme != "https"
+                or not parsed.hostname
+                or parsed.username
+                or parsed.password
+                or parsed.fragment
+                or len(args.avatar_url) > 2048
+            ):
+                raise ValueError("Avatar must be a public HTTPS image URL")
+            changes["avatar_url"] = args.avatar_url
+        elif args.reset_avatar:
+            changes["avatar_url"] = None
+        if args.signature is not None:
+            if len(args.signature) > 160:
+                raise ValueError("Signature must contain at most 160 characters")
+            changes["signature"] = args.signature
+        if not changes:
+            raise ValueError("Supply a name, avatar or signature change")
+        revision = args.revision
+        if revision is None:
+            revision = api.request("GET", "/v1/hosting/profile", authenticated=True)["revision"]
+        return api.request(
+            "PATCH",
+            "/v1/hosting/profile",
+            authenticated=True,
+            json={"expected_revision": revision, **changes},
+        )
     if args.command == "read":
         parsed = urlparse(args.url)
         origin = urlparse(api.server)
@@ -476,6 +573,18 @@ def execute(api, args):
             },
         )
 
+    if args.command == "tags":
+        tags = [] if args.clear else parse_tags(args.tags)
+        path = f"/v1/hosting/sites/{args.site_id}"
+        revision = args.revision
+        if revision is None:
+            revision = api.request("GET", path, authenticated=True)["revision"]
+        return api.request(
+            "PUT",
+            path + "/tags",
+            authenticated=True,
+            json={"tags": tags, "expected_revision": revision},
+        )
     if args.command == "capabilities":
         from urllib.parse import quote
 
@@ -557,7 +666,12 @@ def execute(api, args):
         "GET",
         "/v1/hosting/sites",
         authenticated=True,
-        params={"limit": args.limit, **({"cursor": args.cursor} if args.cursor else {})},
+        params={
+            "limit": args.limit,
+            **({"cursor": args.cursor} if args.cursor else {}),
+            **({"tag": exact_tag(args.tag)} if args.tag is not None else {}),
+            **({"untagged": "true"} if args.untagged else {}),
+        },
     )
 
 

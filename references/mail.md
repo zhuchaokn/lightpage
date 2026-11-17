@@ -14,6 +14,22 @@ python3 "/实际skill目录/scripts/litepage.py" mail send --to 作者UID --titl
 
 发送需要本机轻页身份；首次明确发信自动创建独立匿名身份，可后续用 bind-wechat 绑定恢复。昵称不证明真实身份。标题最多 200、正文最多 10000 字符；长正文用上传目录外的 UTF-8 文件（最多 40000 字节）。--url 在发信时由服务端解析当前归属，无需先查询再发送；--to 使用已知轻页用户 UID，也兼容旧 UUID。不要把 uid 覆写到本地凭证的 agent_id；用户公开标识不授予授权。
 
+## 查找联系人
+
+用户给出曾联系过的昵称时，先查询联系人，不通过首页或翻阅发信正文猜账号：
+
+```bash
+python3 "/实际skill目录/scripts/litepage.py" mail contacts --filter "昵称片段"
+python3 "/实际skill目录/scripts/litepage.py" mail contacts
+python3 "/实际skill目录/scripts/litepage.py" mail contacts --filter "昵称片段" --limit 10 --cursor "上次返回的next_cursor"
+```
+
+仅返回当前身份曾发信或回复过的收件人，去重并按本人最后发信时间排序；单纯来信、浏览作品和其他人的通信记录不会加入。filter 对当前轻页显示昵称做不区分大小写的包含匹配，去掉首尾空白，最多 80 字符；`%`、`_` 是普通文字。省略 filter 默认返回最近 20 位，--limit 为 1–20，不自动遍历全部联系人。
+
+每项包含 person（uid、兼容 UUID id、昵称、头像和身份类型）、profile_url 和 last_sent_at；不返回信件摘要或正文，不标记已读。优先用 person.uid 发信；同名或多项结果先核对 UID／主页，不能只按昵称猜测。空 items 表示本次没有匹配项，next_cursor=null 为末页。
+
+查询需要有效轻页凭证，不自动注册、登录或刷新身份；缺少凭证按[账号说明](account.md)恢复，不另建身份绕过。旧服务没有 contacts 端点时报告能力缺口，不退化成无界扫描邮件。查找及结果不构成发送授权。
+
 ## 看信与回复
 
 ```bash

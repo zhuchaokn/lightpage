@@ -41,6 +41,7 @@ npx skills add zhuchaokn/lightpage --skill lightpage
 - 发布 HTML、Markdown、TXT 或静态网站目录，生成分享链接。
 - 按需读取作品原文，支持分片续读。
 - 更新已有作品并保留链接，管理分享方式、密码和下架。
+- 永久删除单篇作品：先展示只读预览，用户二次确认后才删除，不提供批量删除。
 - 查看访问申请，按用户许可批准、拒绝、主动授权或撤销。审批沿现有作品链接使用，独立作品域名可作为可选隔离配置。
 - 查看自己的作品和访问统计。
 - 按昵称模糊查找自己曾发信的联系人，不带筛选返回最近 20 位。
@@ -64,7 +65,7 @@ python3 scripts/litepage.py mail contacts --filter "Wayne"
 
 ## 版本与项目范围
 
-当前 Skill 版本：**0.13.0**。
+当前 Skill 版本：**0.14.0**。
 
 本仓库发布 lightpage Skill、参考文档和运行必需的客户端脚本。后端服务、官网工程、业务数据库和部署配置由轻页平台维护。请通过 [Issues](https://github.com/zhuchaokn/lightpage/issues) 提交使用问题，不要上传账号凭证或私有认领入口。
 

@@ -2,7 +2,7 @@
 metadata:
   slug: "lightpage"
   displayName: "lightpage"
-  version: "0.13.0"
+  version: "0.14.0"
   tags: ["内容分享", "content-sharing", "网页发布", "web-publishing", "静态网站", "static-site", "HTML托管", "html-hosting", "免费工具", "free-tools"]
   summary: "免费托管 HTML、Markdown、TXT 与静态作品，支持原文读取、作品管理、微信登录、评论和站内信。 Free hosting for HTML, Markdown, TXT and static works, with source reading, management, WeChat login, comments and private mail."
   homepage: "https://lightpage.hqdx.store"
@@ -22,6 +22,7 @@ description: 使用轻页 lightpage 免费发布 HTML、Markdown、TXT 或静态
 
 - 用户要把网页、文档或静态作品发布出去，拿到可访问的分享链接。
 - 用户要读取轻页作品正文，或更新、管理已有作品，包括分享方式、访问授权、密码、下架和访问统计。
+  永久删除目前只支持单篇：必须先展示该篇删除预览并取得用户明确二次确认，才可提交；首次删除请求不等于二次确认。详见[删除作品](references/management.md#永久删除单篇作品)。
 - 用户要认领作品、生成分享二维码、联系作品作者或轻页维护者，或为页面接入平台能力。
 
 只要求生成文件或本地预览时，不上传。轻页托管静态产物，不执行构建或业务后端。
@@ -95,7 +96,7 @@ python3 "<skill目录>/scripts/litepage.py" capabilities comments
 |---|---|
 | 分享方式、查看访问申请、批准指定账号或撤销授权 | [访问授权](references/access.md)；发布用一个 `--sharing` 选项 |
 | 更新原作品、设置发布密码或首页可见性 | [发布说明](references/publishing.md)；更新用 `update 作品UUID /作品/dist`，保留原链接 |
-| 读取正文、找自己的作品、改密码、下架、查访问统计或更新头像／昵称／签名 | [作品管理](references/management.md) |
+| 读取正文、找自己的作品、改密码、下架、二次确认后单篇删除、查访问统计或更新头像／昵称／签名 | [作品管理](references/management.md) |
 | 生成作品分享二维码 | [分享二维码](references/management.md#生成作品分享二维码)；只在用户要求时生成 |
 | 联系轻页维护者 | [反馈](references/feedback.md) |
 | 其他使用疑问 | [常见问答](references/faq.md) |

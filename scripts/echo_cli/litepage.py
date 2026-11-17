@@ -196,6 +196,15 @@ def parser():
     unpublish = commands.add_parser("unpublish")
     unpublish.add_argument("site_id", type=uuid.UUID)
     unpublish.add_argument("--revision", type=int, required=True)
+    deletion = commands.add_parser(
+        "delete",
+        help="Preview one permanent deletion; confirm only after the user's second approval",
+    )
+    deletion.add_argument("site_id", type=uuid.UUID)
+    deletion.add_argument(
+        "--confirm-token",
+        help="Token from this work's preview; supply only after explicit user confirmation",
+    )
     login = commands.add_parser("login")
     login.add_argument("--wechat", action="store_true", required=True)
     login.add_argument("--force", action="store_true")
@@ -652,6 +661,18 @@ def execute(api, args):
             f"/v1/hosting/sites/{args.site_id}/unpublish",
             authenticated=True,
             json={"expected_revision": args.revision},
+        )
+    if args.command == "delete":
+        path = f"/v1/hosting/sites/{args.site_id}"
+        if args.confirm_token is None:
+            return api.request("GET", path + "/delete-confirmation", authenticated=True)
+        if not 1 <= len(args.confirm_token) <= 1024:
+            raise RuntimeError("Use the confirmation token from this work's preview")
+        return api.request(
+            "DELETE",
+            path,
+            authenticated=True,
+            json={"confirmation_token": args.confirm_token},
         )
     if args.command == "usage":
         return api.request("GET", "/v1/hosting/usage", authenticated=True)

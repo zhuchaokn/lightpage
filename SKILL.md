@@ -2,12 +2,12 @@
 metadata:
   slug: "lightpage"
   displayName: "lightpage"
-  version: "0.10.1"
+  version: "0.13.0"
   tags: ["内容分享", "content-sharing", "网页发布", "web-publishing", "静态网站", "static-site", "HTML托管", "html-hosting", "免费工具", "free-tools"]
   summary: "免费托管 HTML、Markdown、TXT 与静态作品，支持原文读取、作品管理、微信登录、评论和站内信。 Free hosting for HTML, Markdown, TXT and static works, with source reading, management, WeChat login, comments and private mail."
   homepage: "https://lightpage.hqdx.store"
 name: lightpage
-description: 使用轻页 lightpage 免费发布 HTML、Markdown、TXT 或静态网站并获取分享链接。用户要求发布或分享作品、读取轻页正文、管理已有作品、设置分享方式、处理访问授权、查看访问统计、微信认领、生成分享二维码、联系作者或维护者、接入平台能力时使用。
+description: 使用轻页 lightpage 免费发布 HTML、Markdown、TXT 或静态网站并获取分享链接。用户要求发布或分享作品、读取轻页正文、管理已有作品、更新个人头像／昵称／签名、设置分享方式、处理访问授权、查看访问统计、微信认领、生成分享二维码、联系作者或维护者、接入平台能力时使用。
 ---
 
 # 轻页 lightpage
@@ -48,7 +48,11 @@ description: 使用轻页 lightpage 免费发布 HTML、Markdown、TXT 或静态
 
 4. **交付。** 按[结果与交付](references/delivery.md)核对成功状态，给出实际返回的作品链接、访问方式和验证结论。新作品默认仅链接访问（`private`），持有链接的人可读取；需要密码保护或首页展示时按用户要求设置。微信认领按下面的“登录授权与作品绑定”处理。
 
+用户指定分类时，用 `--tags "工具,效率"` 添加多个标签，支持中英文逗号；更新省略保留，`--clear-tags` 清空。单独修改与筛选见[标签管理](references/management.md#标签管理)。不自动推断标签。
+
 封面截图是可选项；需要时见[截图说明](references/preflight.md#作品预览截图)。
+
+新发布默认加装 Home 导航；要求没有平台可见控件时，使用 `--without-home`，并不安装标准评论／登录 SDK。更新省略保留 Home 配置；`--with-home` 可恢复。自定义主页跳转先按需读取 `capabilities home` 返回的 guide_url。
 
 ### 登录授权与作品绑定
 
@@ -62,18 +66,19 @@ description: 使用轻页 lightpage 免费发布 HTML、Markdown、TXT 或静态
 
 ### 站内信：联系作品发布者
 
-可以根据作品链接直接给当前发布者发站内信，用于提问、反馈或交流；也可以查询发布者、查看自己的收件箱和回复来信。站内信在轻页内收发，网页管理页也能查看。
+可以根据作品链接直接给当前发布者发站内信，用于提问、反馈或交流；也可以按昵称模糊查找曾发信的联系人、查询发布者、查看自己的收件箱和回复来信。站内信在轻页内收发，网页管理页也能查看。
 
 ```bash
+python3 "<skill目录>/scripts/litepage.py" mail contacts --filter "昵称片段"
 python3 "<skill目录>/scripts/litepage.py" mail send --url "作品URL" --title "关于这个作品" --text "用户要发送的内容"
 python3 "<skill目录>/scripts/litepage.py" mail inbox --unread --limit 10
 ```
 
-发送需要轻页身份，首次明确发信可自动创建匿名身份。收到提醒后，按当前任务需要查看来信或告知用户；发送与回复按用户授权执行。查询发布者、读取正文和回复命令见[站内信](references/mail.md)。
+用户只给曾联系过的昵称时，先用 mail contacts --filter 模糊查询；不带 filter 默认返回最近 20 位本人曾发信的收件人，不读取信件正文。同名或多项结果需核对账号后再发，查找不构成发送授权。联系人查询复用现有身份、不自动注册。发送需要轻页身份，首次明确发信可自动创建匿名身份。收到提醒后，按当前任务需要查看来信或告知用户；发送与回复按用户授权执行。查询发布者、读取正文和回复命令见[站内信](references/mail.md)。
 
 ### Capabilities：给页面接入平台能力
 
-`capabilities` 用于发现轻页提供的页面能力，并获取接入说明。当前有访客微信登录（`login`）、位置评论（`comments`）和访问授权（`access`）：访客可用微信登录表明身份，或围绕选中文字和页面位置发表评论。这些是页面访客使用的能力，作品所有者的登录与绑定按上节操作。
+`capabilities` 用于发现轻页提供的页面能力，并获取接入说明。当前有访客微信登录（`login`）、位置评论（`comments`）、访问授权（`access`）和发布者主页（`home`）：访客可用微信登录表明身份，或围绕选中文字和页面位置发表评论。这些是页面访客使用的能力，作品所有者的登录与绑定按上节操作。
 
 ```bash
 python3 "<skill目录>/scripts/litepage.py" capabilities
@@ -90,7 +95,7 @@ python3 "<skill目录>/scripts/litepage.py" capabilities comments
 |---|---|
 | 分享方式、查看访问申请、批准指定账号或撤销授权 | [访问授权](references/access.md)；发布用一个 `--sharing` 选项 |
 | 更新原作品、设置发布密码或首页可见性 | [发布说明](references/publishing.md)；更新用 `update 作品UUID /作品/dist`，保留原链接 |
-| 读取正文、找自己的作品、改密码、下架或查访问统计 | [作品管理](references/management.md) |
+| 读取正文、找自己的作品、改密码、下架、查访问统计或更新头像／昵称／签名 | [作品管理](references/management.md) |
 | 生成作品分享二维码 | [分享二维码](references/management.md#生成作品分享二维码)；只在用户要求时生成 |
 | 联系轻页维护者 | [反馈](references/feedback.md) |
 | 其他使用疑问 | [常见问答](references/faq.md) |

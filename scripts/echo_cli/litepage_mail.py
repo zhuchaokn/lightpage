@@ -19,6 +19,10 @@ def commands(root):
     mail = root.add_parser("mail", help="Read, send and reply to LightPage private mail")
     choices = subparsers(mail, dest="mail_command")
     choices.add_parser("status")
+    contacts = choices.add_parser("contacts", help="Find people you have sent LightPage mail to")
+    contacts.add_argument("--filter", help="Case-insensitive nickname substring")
+    contacts.add_argument("--limit", type=int, choices=range(1, 21), default=20, metavar="1-20")
+    contacts.add_argument("--cursor")
     for name in ("inbox", "sent"):
         page = choices.add_parser(name)
         page.add_argument("--limit", type=int, choices=range(1, 21), default=10, metavar="1-20")
@@ -107,4 +111,13 @@ def execute(api, args, ensure_identity):
         params["cursor"] = args.cursor
     if command == "inbox" and args.unread:
         params["unread"] = "true"
+    if command == "contacts" and args.filter is not None:
+        value = args.filter.strip()
+        if (
+            not value
+            or len(args.filter) > 80
+            or any(ord(c) < 32 or 0xD800 <= ord(c) <= 0xDFFF for c in args.filter)
+        ):
+            raise RuntimeError("Contact filter must be nonblank and at most 80 characters")
+        params["filter"] = value
     return api.request("GET", "/v1/hosting/mail/" + command, authenticated=True, params=params)

@@ -50,6 +50,10 @@ npx skills add zhuchaokn/lightpage --skill lightpage
 
 平台免费，作品不设置到期时间；上传大小、文件数和平台资源有上限，具体以当前服务返回为准。平台托管静态产物，构建工程需先在本地构建。页面交互与外部服务能否正常运行，需要在发布前检查。
 
+## 一体两面
+
+想让作品也适合 AI 阅读，可以在 index.html 旁附赠自由编写的 Agent.md。单独发布或更新 HTML 时，Skill 会把它一起上传；同一个作品 URL 用 Accept: text/html 读取网页，用 Accept: text/markdown 读取 Agent.md。没有 Agent.md 时保留原有页面行为，无需新参数。
+
 ## 手动使用
 
 下列命令从本仓库根目录运行，文件路径替换为你自己的作品。先本地检查，再发布：
@@ -65,7 +69,7 @@ python3 scripts/litepage.py mail contacts --filter "Wayne"
 
 ## 版本与项目范围
 
-当前 Skill 版本：**0.14.0**。
+当前 Skill 版本：**0.16.0**。
 
 本仓库发布 lightpage Skill、参考文档和运行必需的客户端脚本。后端服务、官网工程、业务数据库和部署配置由轻页平台维护。请通过 [Issues](https://github.com/zhuchaokn/lightpage/issues) 提交使用问题，不要上传账号凭证或私有认领入口。
 

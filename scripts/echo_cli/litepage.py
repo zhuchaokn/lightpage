@@ -13,7 +13,7 @@ import uuid
 from pathlib import Path
 from urllib.parse import urlparse
 
-from echo_cli import litepage_access, litepage_mail, transport
+from echo_cli import litepage_access, litepage_mail, litepage_referrals, transport
 from echo_cli.client import API, APIError, checked
 from echo_cli.compat import subparsers, unlink
 from echo_cli.credentials import CredentialStore, atomic_json
@@ -43,6 +43,10 @@ class LitePageAPI(API):
     skill_name = "lightpage"
     skill_version = LITEPAGE_SKILL_VERSION
 
+    def prepare_login_body(self, body):
+        receipt = litepage_referrals.pending(self)
+        return {**body, **({"referral_receipt": receipt} if receipt else {})}
+
     def request(self, method, path, **kwargs):
         if path in {"/v1/hosting/feedback"}:
             # Anonymous feedback never reads credentials, refreshes or registers.
@@ -57,7 +61,13 @@ class LitePageAPI(API):
             }
         if path in {"/v1/auth/anonymous", "/v1/auth/connect", "/v1/auth/bind", "/v1/me"}:
             path = path.replace("/v1/", "/v1/hosting/", 1)
-        return super().send(method, path, **kwargs)
+        response = super().send(method, path, **kwargs)
+        receipt = kwargs.get("json", {}).get("referral_receipt")
+        if receipt and path == "/v1/hosting/auth/anonymous" and response.status_code < 300:
+            litepage_referrals.acknowledge(
+                self, receipt, response.json().get("referral_status", "submitted")
+            )
+        return response
 
 
 def read_size(value):
@@ -98,6 +108,7 @@ def parser():
     )
     root.add_argument("--server", default=os.getenv("LITEPAGE_SERVER", DEFAULT_SERVER))
     commands = subparsers(root, dest="command")
+    litepage_referrals.commands(commands)
     read = commands.add_parser("read", help="Read a bounded HTML document and record Agent visits")
     read.add_argument("url")
     read.add_argument("--read-id", type=uuid.UUID, default=None)
@@ -287,6 +298,16 @@ def ensure_identity(api):
     if saved is None:
         api.native_login(socket.gethostname(), mode="anonymous", agent="轻页创作者")
         print("已创建匿名轻页身份：请保留本机凭证；绑定微信后可跨设备恢复。", file=sys.stderr)
+    else:
+        receipt = litepage_referrals.pending(api)
+        if receipt:
+            result = api.request(
+                "POST",
+                "/v1/hosting/referrals/source",
+                authenticated=True,
+                json={"referral_receipt": receipt},
+            )
+            litepage_referrals.acknowledge(api, receipt, result["status"])
 
 
 def claim_handoff(api, creator):
@@ -540,6 +561,8 @@ def publish(api, args):
 
 
 def execute(api, args):
+    if args.command == "referral":
+        return litepage_referrals.execute(api, args, ensure_identity)
     if args.command == "profile":
         if args.profile_command in {"show", "works"}:
             own = None

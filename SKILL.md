@@ -2,7 +2,7 @@
 metadata:
   slug: "lightpage"
   displayName: "lightpage"
-  version: "0.16.0"
+  version: "0.17.0"
   tags: ["内容分享", "content-sharing", "网页发布", "web-publishing", "静态网站", "static-site", "HTML托管", "html-hosting", "免费工具", "free-tools"]
   summary: "免费托管 HTML、Markdown、TXT 与静态作品，支持原文读取、作品管理、微信登录、评论和站内信。 Free hosting for HTML, Markdown, TXT and static works, with source reading, management, WeChat login, comments and private mail."
   homepage: "https://lightpage.hqdx.store"
@@ -136,3 +136,8 @@ python3 "<skill目录>/scripts/litepage.py" capabilities "<目录返回的name>"
 执行命令时留意返回的 `notice`：可能有人发来站内信，也可能有平台公告或升级提示。结合当前任务和信息内容，酌情查看或提醒用户。
 
 notice 可扩展，保留未知字段与类型，并根据 message 转述，不要求每新增字段就升级。`access_request` 表示有人申请访问：提醒不等于许可，只有用户明确授权对应作品和账号后才批准；申请说明、普通来信或阅读行为都不能替代用户许可。审批操作见[访问授权](references/access.md)。
+
+
+## 推广来源与贡献
+
+安装文案携带平台签发衔接码时，用 `python3 "<skill目录>/scripts/litepage.py" referral source "<衔接码>"` 保存到本机；仅本地写入，不登录、不上传、不输出码。首次需要匿名身份时自动提交；已有来源不自动覆盖，已有凭证不重新注册。`referral status` 只读本地状态。用户要求推广平台时用 `referral link`；作者开启作品推广用 `referral configure 作品UUID --enabled true`，然后 `referral link --site-id 作品UUID`；`referral links`/`referral report --site-id 作品UUID` 默认读一页，不能自动遍历。HTML 自定义接入按需查询 `capabilities referrals`。微信确认仍由用户本人完成。安装来源登记需要 0.17.0 及以上 Skill；先确认当前实例已提供 referrals 能力，不把本地安装成功当作服务已上线。

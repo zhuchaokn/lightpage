@@ -54,6 +54,10 @@ npx skills add zhuchaokn/lightpage --skill lightpage
 
 想让作品也适合 AI 阅读，可以在 index.html 旁附赠自由编写的 Agent.md。单独发布或更新 HTML 时，Skill 会把它一起上传；同一个作品 URL 用 Accept: text/html 读取网页，用 Accept: text/markdown 读取 Agent.md。没有 Agent.md 时保留原有页面行为，无需新参数。
 
+## 推广来源与贡献
+
+通过专属链接推广轻页或作品，可以查看带来的访问和后续成果。安装文案附带的平台凭据用 `referral source` 保存到本机，首次匿名注册自动携带；`referral link` 获取本人链接，作者用 `referral configure` 开启作品推广，`referral links` 与 `referral report` 分页查看贡献。来源码不授予登录或作品访问权限，复制安装文案不等于安装成功；先确认当前实例已提供 referrals 能力。
+
 ## 手动使用
 
 下列命令从本仓库根目录运行，文件路径替换为你自己的作品。先本地检查，再发布：
@@ -69,7 +73,7 @@ python3 scripts/litepage.py mail contacts --filter "Wayne"
 
 ## 版本与项目范围
 
-当前 Skill 版本：**0.16.0**。
+当前 Skill 版本：**0.17.0**。
 
 本仓库发布 lightpage Skill、参考文档和运行必需的客户端脚本。后端服务、官网工程、业务数据库和部署配置由轻页平台维护。请通过 [Issues](https://github.com/zhuchaokn/lightpage/issues) 提交使用问题，不要上传账号凭证或私有认领入口。
 

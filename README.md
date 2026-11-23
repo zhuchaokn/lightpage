@@ -56,7 +56,7 @@ npx skills add zhuchaokn/lightpage --skill lightpage
 
 ## 推广来源与贡献
 
-通过专属链接推广轻页或作品，可以查看带来的访问和后续成果。安装文案附带的平台凭据用 `referral source` 保存到本机，首次匿名注册自动携带；`referral link` 获取本人链接，作者用 `referral configure` 开启作品推广，`referral links` 与 `referral report` 分页查看贡献。来源码不授予登录或作品访问权限，复制安装文案不等于安装成功；先确认当前实例已提供 referrals 能力。
+通过专属链接推广轻页或作品，可以查看带来的访问和后续成果。安装文案只携带公开 `lp_ref` 推广码，保存到 `~/.cache/lightpage/lp_ref`，文件内只放纯推广码；首次使用自动读取。`referral source` 可写入同一文件，旧来源继续兼容；`referral link` 获取本人链接，作者用 `referral configure` 开启作品推广，`referral links` 与 `referral report` 分页查看贡献。来源码不授予登录或作品访问权限，复制安装文案不等于安装成功；先确认当前实例已提供 referrals 能力。
 
 ## 手动使用
 

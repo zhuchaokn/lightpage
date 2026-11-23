@@ -45,7 +45,7 @@ class LitePageAPI(API):
 
     def prepare_login_body(self, body):
         receipt = litepage_referrals.pending(self)
-        return {**body, **({"referral_receipt": receipt} if receipt else {})}
+        return {**body, **litepage_referrals.fields(receipt)}
 
     def request(self, method, path, **kwargs):
         if path in {"/v1/hosting/feedback"}:
@@ -62,7 +62,9 @@ class LitePageAPI(API):
         if path in {"/v1/auth/anonymous", "/v1/auth/connect", "/v1/auth/bind", "/v1/me"}:
             path = path.replace("/v1/", "/v1/hosting/", 1)
         response = super().send(method, path, **kwargs)
-        receipt = kwargs.get("json", {}).get("referral_receipt")
+        receipt = kwargs.get("json", {}).get("lp_ref") or kwargs.get("json", {}).get(
+            "referral_receipt"
+        )
         if receipt and path == "/v1/hosting/auth/anonymous" and response.status_code < 300:
             litepage_referrals.acknowledge(
                 self, receipt, response.json().get("referral_status", "submitted")
@@ -305,7 +307,7 @@ def ensure_identity(api):
                 "POST",
                 "/v1/hosting/referrals/source",
                 authenticated=True,
-                json={"referral_receipt": receipt},
+                json=litepage_referrals.fields(receipt),
             )
             litepage_referrals.acknowledge(api, receipt, result["status"])
 

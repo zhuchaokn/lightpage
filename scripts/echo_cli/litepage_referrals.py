@@ -36,7 +36,11 @@ def public_code(value):
     value = value.strip()
     if value.startswith("lp_ref="):
         value = value[len("lp_ref=") :]
-    return value if re.fullmatch(r"(?:[A-Za-z0-9]{8}|[A-Za-z0-9_-]{24,32})", value) else None
+    return (
+        value
+        if re.fullmatch(r"(?:[a-z0-9]{10}|[A-Za-z0-9]{8}|[A-Za-z0-9_-]{24,32})", value)
+        else None
+    )
 
 
 def read_code(api):
@@ -99,7 +103,7 @@ def fields(value):
         return {}
     return {
         "lp_ref"
-        if re.fullmatch(r"(?:[A-Za-z0-9]{8}|[A-Za-z0-9_-]{24,32})", value)
+        if re.fullmatch(r"(?:[a-z0-9]{10}|[A-Za-z0-9]{8}|[A-Za-z0-9_-]{24,32})", value)
         else "referral_receipt": value
     }
 

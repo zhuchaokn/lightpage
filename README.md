@@ -86,3 +86,5 @@ python3 scripts/litepage.py mail contacts --filter "Wayne"
 lightpage is an Agent Skill for publishing and sharing HTML, Markdown, TXT and static websites through the free LightPage service. Install this repository as a skill, ask your agent to create or publish a page, and share the resulting URL. It includes the skill instructions, references, and the Python client required to run it.
 
 Requires an agent with local Python execution. Supports Python 3.6–3.12 on macOS/Linux, or Windows through WSL. Routine publishing uses the Python standard library; optional screenshot processing may require additional tools. See [SKILL.md](SKILL.md) for the complete workflow.
+
+推荐安装文案中的 `lp_ref` 使用推荐者 UID，安装时将纯 UID 保存到 `~/.cache/lightpage/lp_ref`，首次使用自动携带来源。首次有效加入会建立双向联系人，`mail contacts` 可分页查找朋友和曾发信对象；关系不等于自动发信许可。

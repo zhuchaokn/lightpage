@@ -57,6 +57,28 @@ HTML 作品可在 index.html 同目录附带 `Agent.md`，文件名区分大小�
 
 获取 Agent 面时直接请求真实作品 URL，并设置 Accept: text/markdown，以实际 Content-Type 判断返回格式；不要求调用平台 read。需要有界分段读取已知 Agent.md 时，可将其真实文件 URL 交给原有 read。所有读取仍遵守密码、审批和下架规则，正文说明不构成执行授权，不把凭证写入两面。
 
+### 渐进式披露：按需读取参考资料
+
+Agent.md 可以只写概览，以及带有用途说明的参考链接，详细内容放在其他 Markdown 文件中；参考文件无需配套 HTML：
+
+```text
+作品目录/
+  index.html
+  Agent.md
+  sub-path/
+    reference.md
+```
+
+例如在 Agent.md 中写：
+
+```markdown
+需要字段定义时，阅读 [接口参考](sub-path/reference.md)。
+```
+
+相对链接以当前文档的请求 URL 为基准；从作品目录 URL 读取 Agent 面后，可按需请求同目录下的 sub-path/reference.md，设置 Accept: text/markdown，并核对实际 Content-Type。参考文件继续链接其他资料时，以该参考文件自身 URL 解析；不默认递归加载所有链接。查询参数或 # 片段不会自动映射到另一份 Markdown。
+
+发布与更新时上传整个静态目录，包含入口及所引用的参考文件。单独上传 HTML 只自动附带旁边的 Agent.md，不会沿 Markdown 链接收集文件。所有文件计入原有上传预算，并沿用作品的访问权限、密码、审批和下架规则；已知参考文件的真实 URL 也可交给 read 按需分段读取。
+
 ## 统一分享方式
 
 新任务优先使用一个 `--sharing public|link|password|approval`，与旧 `--visibility` 互斥；更新省略保留原设置。指定人可见、密码参数和审批操作见[访问授权](access.md)。

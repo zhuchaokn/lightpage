@@ -2,7 +2,7 @@
 metadata:
   slug: "lightpage"
   displayName: "lightpage"
-  version: "0.17.0"
+  version: "0.18.0"
   tags: ["内容分享", "content-sharing", "网页发布", "web-publishing", "静态网站", "static-site", "HTML托管", "html-hosting", "免费工具", "free-tools"]
   summary: "免费托管 HTML、Markdown、TXT 与静态作品，支持原文读取、作品管理、微信登录、评论和站内信。 Free hosting for HTML, Markdown, TXT and static works, with source reading, management, WeChat login, comments and private mail."
   homepage: "https://lightpage.hqdx.store"
@@ -140,4 +140,4 @@ notice 可扩展，保留未知字段与类型，并根据 message 转述，不�
 
 ## 推广来源与贡献
 
-安装文案携带平台签发衔接码时，用 `python3 "<skill目录>/scripts/litepage.py" referral source "<衔接码>"` 保存到本机；仅本地写入，不登录、不上传、不输出码。首次需要匿名身份时自动提交；已有来源不自动覆盖，已有凭证不重新注册。`referral status` 只读本地状态。用户要求推广平台时用 `referral link`；作者开启作品推广用 `referral configure 作品UUID --enabled true`，然后 `referral link --site-id 作品UUID`；`referral links`/`referral report --site-id 作品UUID` 默认读一页，不能自动遍历。HTML 自定义接入按需查询 `capabilities referrals`。微信确认仍由用户本人完成。安装来源登记需要 0.17.0 及以上 Skill；先确认当前实例已提供 referrals 能力，不把本地安装成功当作服务已上线。
+安装文案含 `lp_ref=推广码` 时，在首次使用前执行 `python3 "<skill目录>/scripts/litepage.py" referral source "lp_ref=推广码"`（替换为文案中的实际值）。命令把纯推广码写入 `~/.cache/lightpage/lp_ref`，文件内容例如 `Ab3dE7k2`（可带末尾换行），不写入 `lp_ref=` 或 JSON。也支持安装时直接创建该文件，脚本首次使用自动读取；不修改登录凭证、不登录、不上传。内部提交状态仍按服务隔离保存，保留首次来源；首次使用请求自动携带 `lp_ref`，用于记录推荐来源。推广码不授予任何账号或作品权限。首次需要匿名身份时自动提交；已有来源不自动覆盖，已有凭证不重新注册。`referral status` 只读本地状态。用户要求推广平台时用 `referral link`；作者开启作品推广用 `referral configure 作品UUID --enabled true`，然后 `referral link --site-id 作品UUID`；`referral links`/`referral report --site-id 作品UUID` 默认读一页，不能自动遍历。HTML 自定义接入按需查询 `capabilities referrals`。微信确认仍由用户本人完成。公开推广码登记需要 0.18.0 及以上 Skill；仍兼容 0.17.0 保存的旧衔接码。先确认当前实例已提供 referrals 能力，不把本地安装成功当作服务已上线。
